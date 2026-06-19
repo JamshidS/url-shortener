@@ -11,4 +11,5 @@ def save_and_flush(session: Session, url: Url):
         url (Url): The URL object to be saved.
     """
     session.add(url)
+    session.commit() 
     session.flush()  # Flush the session to persist changes

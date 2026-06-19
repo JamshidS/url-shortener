@@ -3,7 +3,7 @@ import logging
 from contextlib import asynccontextmanager
 from app.algorithms.bloom_filter import BloomFilter
 from app.middlewares import add_cors_middleware
-
+from app.api.v1.url import router as url_router
 
 logging.basicConfig(level=logging.INFO)  
 logger = logging.getLogger(__name__)
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.bloom_filter = BloomFilter(
-        expected_items=365_000_000_000,
+        expected_items=1_000_000,
         false_positive_rate=0.01
     )
     yield
@@ -29,6 +29,6 @@ app = FastAPI(
 
 add_cors_middleware(app)
 
-
+app.include_router(url_router)  # Include the URL router
 logger.info("Routes have been included successfully...")
 logger.info("FastAPI application is ready to accept requests...")

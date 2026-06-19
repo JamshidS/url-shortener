@@ -1,4 +1,4 @@
-from random import random
+import random
 import string
 
 from sqlalchemy.orm import Session
@@ -34,11 +34,11 @@ def create_url_with_bloom_filter(url_data: UrlCreate, session: Session, bloom_fi
             short_code = code
             break
 
-    url_data.short_url = short_code
-    url = Url(**url_data.dict())
+    url_data.short_code = short_code
+    url = Url(**url_data.model_dump())
     save_and_flush(session, url)
 
-    return UrlResponse(**url.dict())
+    return UrlResponse.model_validate(url)
 
 
 def create_url_with_base_conversion(url_data: UrlCreate, session: Session) -> UrlResponse:
