@@ -1,0 +1,24 @@
+from fastapi import FastAPI
+import logging
+from contextlib import asynccontextmanager
+from app.middlewares import add_cors_middleware
+
+
+logging.basicConfig(level=logging.INFO)  
+logger = logging.getLogger(__name__)
+
+
+app = FastAPI(
+    title="URL Shortener API",
+    description="A simple URL shortener service built with FastAPI.",
+    version="1.0.0",
+    docs_url="/v1/docs",         
+    redoc_url="/v1/docs/redoc",    
+    openapi_url="/v1/openapi.json",   
+)
+
+add_cors_middleware(app)
+
+
+logger.info("Routes have been included successfully...")
+logger.info("FastAPI application is ready to accept requests...")
