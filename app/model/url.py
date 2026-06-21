@@ -1,17 +1,35 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Boolean
-from sqlalchemy.orm import relationship
+from datetime import UTC, datetime
+
+from sqlalchemy import Boolean, DateTime, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column
+
 from app.core.database import Base
-import datetime
+
+
+def utc_now() -> datetime:
+    return datetime.now(UTC)
+
 
 class Url(Base):
     __tablename__ = "urls"
 
-    id = Column(Integer, primary_key=True, index=True)
-    original_url = Column(Text, nullable=False)
-    short_code = Column(String(10), unique=True, index=True, nullable=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    expires_at = Column(DateTime, nullable=True)
-    is_active = Column(Boolean, default=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    original_url: Mapped[str] = mapped_column(Text, nullable=False)
+    short_code: Mapped[str] = mapped_column(
+        String(10),
+        unique=True,
+        nullable=False,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=utc_now,
+        nullable=False,
+    )
+    expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
-    def __repr__(self):
-        return f"<Url(id={self.id}, short_code='{self.short_code}', original_url='{self.original_url}')>"
+    def __repr__(self) -> str:
+        return f"Url(id={self.id!r}, short_code={self.short_code!r})"

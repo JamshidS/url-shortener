@@ -1,30 +1,24 @@
+from collections.abc import Generator
+
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-import os
-from dotenv import load_dotenv
+from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
-# Load environment variables from .env file
-load_dotenv()
-
-DATABASE_URL = os.getenv("DATABASE_URL")
+from app.core.config import get_settings
 
 
-# Optional: fallback to hardcoded PostgreSQL (e.g. for local dev)
-if not DATABASE_URL:
-    DATABASE_URL = "postgresql://postgres:12345@localhost:5432/test"
-    print("Warning: DATABASE_URL not found in .env. Using hardcoded PostgreSQL URL.")
+class Base(DeclarativeBase):
+    pass
 
 
+settings = get_settings()
+engine = create_engine(
+    settings.database_url,
+    pool_pre_ping=True,
+    pool_recycle=1800,
+)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 
-Base = declarative_base()
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Database session dependency
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close() 
+def get_db() -> Generator[Session, None, None]:
+    with SessionLocal() as session:
+        yield session
