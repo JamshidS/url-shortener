@@ -1,9 +1,12 @@
 from fastapi import FastAPI
 import logging
 from contextlib import asynccontextmanager
+from app.algorithms import bloom_filter
 from app.algorithms.bloom_filter import BloomFilter
+from app.algorithms.redis_bloomfilter import RedisBloomFilter
 from app.middlewares import add_cors_middleware
 from app.api.v1.url import router as url_router
+from app.clients.redis import redis_client
 
 logging.basicConfig(level=logging.INFO)  
 logger = logging.getLogger(__name__)
@@ -14,6 +17,16 @@ async def lifespan(app: FastAPI):
         expected_items=1_000_000,
         false_positive_rate=0.01
     )
+
+    redis_bloom_filter = RedisBloomFilter(redis_client)
+
+    redis_bloom_filter.initialize(
+        error_rate=0.01,
+        capacity=365_000_000_000
+    )
+
+    app.state.redis_bloom_filter = redis_bloom_filter
+
     yield
     
 

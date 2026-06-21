@@ -4,6 +4,7 @@ import string
 from sqlalchemy.orm import Session
 
 from app.algorithms.bloom_filter import BloomFilter
+from app.algorithms.redis_bloomfilter import RedisBloomFilter
 from app.model.url import Url
 from app.schema.url import UrlCreate, UrlResponse
 from app.repositories.url import save_and_flush
@@ -31,6 +32,40 @@ def create_url_with_bloom_filter(url_data: UrlCreate, session: Session, bloom_fi
             continue
         else:
             bloom_filter.add(code) 
+            short_code = code
+            break
+
+    url_data.short_code = short_code
+    url = Url(**url_data.model_dump())
+    save_and_flush(session, url)
+
+    return UrlResponse.model_validate(url)
+
+
+
+def create_url_with_redis_bloom_filter(url_data: UrlCreate, session: Session, redis_bloom_filter: RedisBloomFilter) -> UrlResponse:
+    """
+    Generate a short URL from the original URL using Redis Bloom filter.
+
+    Args:
+        url_data (UrlCreate): The original URL data.
+        session (Session): The SQLAlchemy session.
+        redis_bloom_filter (RedisBloomFilter): The Redis Bloom filter instance.
+    """
+
+    def _generate_code() -> str:
+        characters = string.ascii_letters + string.digits
+        return ''.join(random.choice(characters) for _ in range(7))
+
+    short_code = None
+    while True:
+        code = _generate_code()
+
+        # 1. Fast check (Redis)
+        if redis_bloom_filter.contains(code):
+            continue
+        else:
+            redis_bloom_filter.add(code) 
             short_code = code
             break
 
