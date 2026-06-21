@@ -6,7 +6,9 @@ from app.algorithms.bloom_filter import BloomFilter
 from app.algorithms.redis_bloomfilter import RedisBloomFilter
 from app.middlewares import add_cors_middleware
 from app.api.v1.url import router as url_router
-from app.clients.redis import redis_client
+from app.clients.redis import get_redis_client
+from app.algorithms.distributed_id import DistributedIDGenerator
+from app.algorithms.base_encoder import Base62Encoder
 
 logging.basicConfig(level=logging.INFO)  
 logger = logging.getLogger(__name__)
@@ -18,14 +20,18 @@ async def lifespan(app: FastAPI):
         false_positive_rate=0.01
     )
 
-    redis_bloom_filter = RedisBloomFilter(redis_client)
+    redis_client = get_redis_client()
+    redis_bloom_filter = RedisBloomFilter(redis_client, key="url_shortener_bloom_filter")
 
     redis_bloom_filter.initialize(
         error_rate=0.01,
-        capacity=365_000_000_000
+        capacity=1_000_000
     )
 
     app.state.redis_bloom_filter = redis_bloom_filter
+
+    app.state.distributed_id_generator = DistributedIDGenerator(redis_client)
+    app.state.base62_encoder = Base62Encoder()
 
     yield
     
