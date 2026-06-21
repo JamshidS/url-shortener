@@ -13,3 +13,15 @@ def save_and_flush(session: Session, url: Url):
     session.add(url)
     session.commit() 
     session.flush()  # Flush the session to persist changes
+
+
+def find_by_short_code(session: Session, short_code: str) -> Url | None:
+    """Return an active URL for the supplied short code."""
+    return (
+        session.query(Url)
+        .filter(
+            Url.short_code == short_code,
+            Url.is_active.is_(True),
+        )
+        .first()
+    )
