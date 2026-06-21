@@ -1,10 +1,16 @@
 from redis import Redis
 
-def get_redis_client() -> Redis:
-    redis_client = Redis(
-        host='localhost',
-        port=6379,
+from app.core.config import Settings
+
+
+def create_redis_client(settings: Settings) -> Redis:
+    return Redis(
+        host=settings.redis_host,
+        port=settings.redis_port,
+        password=settings.redis_password,
+        db=settings.redis_db,
         decode_responses=True,
-        password='test12345'
+        socket_connect_timeout=settings.redis_socket_timeout_seconds,
+        socket_timeout=settings.redis_socket_timeout_seconds,
+        health_check_interval=30,
     )
-    return redis_client

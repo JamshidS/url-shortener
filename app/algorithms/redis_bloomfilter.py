@@ -1,5 +1,5 @@
-from fastapi import Request
 from redis import Redis, ResponseError
+
 
 class RedisBloomFilter:
 
@@ -8,7 +8,7 @@ class RedisBloomFilter:
         self.key = key
 
 
-    def initialize(self, error_rate: float, capacity: int):
+    def initialize(self, *, error_rate: float, capacity: int) -> None:
         try:
             self.redis_client.execute_command(
                 "BF.RESERVE", self.key, error_rate, capacity
@@ -19,16 +19,11 @@ class RedisBloomFilter:
                     f"Failed to initialize Redis Bloom filter: {e}"
                 ) from e
     
-    def add(self, item: str):
-        self.redis_client.execute_command('BF.ADD', self.key, item)
+    def add(self, item: str) -> bool:
+        return bool(self.redis_client.execute_command("BF.ADD", self.key, item))
     
 
     def contains(self, item: str) -> bool:
         return bool(
-            self.redis_client.execute_command('BF.EXISTS', self.key, item)
+            self.redis_client.execute_command("BF.EXISTS", self.key, item)
         )
-    
-
-
-def get_redis_bloom_filter(request: Request) -> RedisBloomFilter:
-    return request.app.state.redis_bloom_filter
