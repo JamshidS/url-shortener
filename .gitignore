@@ -75,6 +75,7 @@ dmypy.json
 .env
 .env.*
 *.env
+!.env.example
 
 # Docker
 *.log
